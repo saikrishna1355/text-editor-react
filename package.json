@@ -1,7 +1,7 @@
 {
-  "name": "nextjs-text-editor",
-  "version": "0.1.0",
-  "private": true,
+  "name": "react-rich-text-editor",
+  "version": "1.0.0",
+  "description": "A customizable React rich text editor with icon-based toolbar",
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build",
@@ -33,5 +33,7 @@
     "eslint-config-next": "15.3.2",
     "tailwindcss": "^4",
     "typescript": "^5"
-  }
+  },
+  "author": "Sai Krishna M",
+  "license": "MIT"
 }
