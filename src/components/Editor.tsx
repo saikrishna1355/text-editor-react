@@ -10,8 +10,6 @@ import {
 } from "react-icons/fa";
 import { LuHeading1, LuHeading2 } from "react-icons/lu"; // Importing LuHeading1 and LuHeading2 from Lucide
 
-import DOMPurify from "dompurify";
-
 const Editor = () => {
   const editorRef = useRef<HTMLDivElement>(null);
   const [htmlCode, setHtmlCode] = useState<string>("");
