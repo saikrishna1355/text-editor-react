@@ -8,6 +8,26 @@
   border-radius: 5px;
 }
 
+/* UI polish for the demo editor */
+.main_layout {
+  display: flex;
+  justify-content: center;
+  padding: 24px;
+}
+
+.text_editor {
+  width: 100%;
+  max-width: 900px;
+}
+
+.icon_bar button svg {
+  vertical-align: middle;
+}
+
+.toggle_tabs .toggle_btn {
+  font-size: 14px;
+}
+
 button {
   margin-right: 10px;
   padding: 5px 10px;
