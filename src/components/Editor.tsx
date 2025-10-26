@@ -1,98 +1,168 @@
 "use client";
 
-import React, { useRef, useState, useEffect } from "react";
+import { useRef, useState, useEffect } from "react";
 import {
   FaBold,
   FaItalic,
   FaListUl,
   FaLink,
   FaParagraph,
+  FaCode,
 } from "react-icons/fa";
-import { LuHeading1, LuHeading2 } from "react-icons/lu"; // Importing LuHeading1 and LuHeading2 from Lucide
+import { LuHeading1, LuHeading2 } from "react-icons/lu";
 
-const Editor = () => {
+interface EditorProps {
+  initialContent?: string;
+  onChange?: (html: string) => void;
+}
+
+const Editor: React.FC<EditorProps> = ({ initialContent = "", onChange }) => {
   const editorRef = useRef<HTMLDivElement>(null);
-  const [htmlCode, setHtmlCode] = useState<string>("");
+  const [showCode, setShowCode] = useState(false);
+  const [htmlCode, setHtmlCode] = useState<string>(initialContent);
 
-  // When typing into contentEditable (normal text), update HTML code
-  const handleEditorInput = () => {
-    if (editorRef.current) {
-      const content = editorRef.current.innerHTML;
-      setHtmlCode(content);
+  // Save selection position
+  const saveSelection = () => {
+    const selection = window.getSelection();
+    return selection?.getRangeAt(0);
+  };
+
+  // Restore selection position
+  const restoreSelection = (range: Range | null) => {
+    if (!range) return;
+    const selection = window.getSelection();
+    if (selection) {
+      selection.removeAllRanges();
+      selection.addRange(range);
     }
   };
 
-  // When typing HTML code, render it as output in contentEditable
+  // Handle paste events to prevent cursor jumping
+  const handlePaste = (event: React.ClipboardEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    const range = saveSelection();
+    const text = event.clipboardData.getData("text/plain");
+    document.execCommand("insertText", false, text);
+    if (range) {
+      restoreSelection(range);
+    }
+  };
+
+  useEffect(() => {
+    if (editorRef.current && editorRef.current.innerHTML !== initialContent) {
+      editorRef.current.innerHTML = initialContent;
+    }
+    setHtmlCode(initialContent);
+  }, [initialContent]);
+
+  const handleEditorInput = () => {
+    if (editorRef.current) {
+      const content = editorRef.current.innerHTML;
+      if (content !== htmlCode) {
+        setHtmlCode(content);
+        onChange?.(content);
+      }
+    }
+  };
+
   const handleCodeInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const html = e.target.value;
     setHtmlCode(html);
     if (editorRef.current) {
       editorRef.current.innerHTML = html;
     }
+    onChange?.(html);
   };
 
-  // Format the content in the contentEditable div
   const format = (command: string, value?: string) => {
     document.execCommand(command, false, value);
   };
 
-  // On first load
-  useEffect(() => {
-    if (editorRef.current) {
-      const content = editorRef.current.innerHTML;
-      setHtmlCode(content);
-    }
-  }, []);
+  const buttonStyle = {
+    backgroundColor: "#f4f4f4",
+    border: "none",
+    borderRadius: "8px",
+    padding: "10px",
+    margin: "5px",
+    cursor: "pointer",
+    boxShadow: "0 2px 5px rgba(0, 0, 0, 0.1)",
+  };
 
   return (
-    <div
-      style={{
-        display: "grid",
-        gridTemplateColumns: "1fr 1fr",
-        gap: "2rem",
-        padding: "2rem",
-      }}
-    >
-      {/* Box 1: Rich Text / Rendered HTML */}
-      <div>
-        <h2>Rendered HTML</h2>
-        <div style={{ marginBottom: "1rem" }}>
-          <button
-            onClick={() => format("formatBlock", "<p>")}
-            style={buttonStyle}
+    <div className="main_layout">
+      <div className="text_editor">
+        <div
+          className="editor_header"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: "0.75rem",
+            marginBottom: "1rem",
+            flexWrap: "wrap",
+          }}
+        >
+          <div
+            className="icon_bar"
+            style={{ display: "flex", flexWrap: "wrap" }}
           >
-            <FaParagraph />
-          </button>
-          <button onClick={() => format("bold")} style={buttonStyle}>
-            <FaBold />
-          </button>
-          <button onClick={() => format("italic")} style={buttonStyle}>
-            <FaItalic />
-          </button>
-          <button
-            onClick={() => format("insertUnorderedList")}
-            style={buttonStyle}
-          >
-            <FaListUl />
-          </button>
-          <button
-            onClick={() => format("formatBlock", "<h1>")}
-            style={buttonStyle}
-          >
-            <LuHeading1 />
-          </button>
-          <button
-            onClick={() => format("formatBlock", "<h2>")}
-            style={buttonStyle}
-          >
-            <LuHeading2 />
-          </button>
-          <button
-            onClick={() => format("createLink", "https://www.example.com")}
-            style={buttonStyle}
-          >
-            <FaLink />
-          </button>
+            <button
+              onClick={() => format("formatBlock", "<p>")}
+              style={buttonStyle}
+              title="Paragraph"
+            >
+              <FaParagraph />
+            </button>
+            <button
+              onClick={() => format("bold")}
+              style={buttonStyle}
+              title="Bold (Ctrl+B)"
+            >
+              <FaBold />
+            </button>
+            <button
+              onClick={() => format("italic")}
+              style={buttonStyle}
+              title="Italic (Ctrl+I)"
+            >
+              <FaItalic />
+            </button>
+            <button
+              onClick={() => format("insertUnorderedList")}
+              style={buttonStyle}
+              title="Bulleted List"
+            >
+              <FaListUl />
+            </button>
+            <button
+              onClick={() => format("formatBlock", "<h1>")}
+              style={buttonStyle}
+              title="Heading 1"
+            >
+              <LuHeading1 />
+            </button>
+            <button
+              onClick={() => format("formatBlock", "<h2>")}
+              style={buttonStyle}
+              title="Heading 2"
+            >
+              <LuHeading2 />
+            </button>
+            <button
+              onClick={() => format("createLink", "https://www.example.com")}
+              style={buttonStyle}
+              title="Insert Link"
+            >
+              <FaLink />
+            </button>
+            <button
+              onClick={() => setShowCode(!showCode)}
+              style={buttonStyle}
+              title="Toggle HTML"
+            >
+              <FaCode />
+            </button>
+          </div>
         </div>
 
         <div
@@ -100,47 +170,40 @@ const Editor = () => {
           contentEditable
           suppressContentEditableWarning
           onInput={handleEditorInput}
+          onPaste={handlePaste}
           style={{
             border: "1px solid #ccc",
             minHeight: "200px",
             padding: "1rem",
             borderRadius: "8px",
-            backgroundColor: "#fff",
+            outline: "none",
+            marginBottom: "1rem",
           }}
         />
-      </div>
-
-      {/* Box 2: HTML Code View */}
-      <div>
-        <h2>HTML Code</h2>
-        <textarea
-          value={htmlCode}
-          onChange={handleCodeInput}
-          placeholder="Write or paste HTML here..."
-          style={{
-            width: "100%",
-            minHeight: "200px",
-            padding: "1rem",
-            borderRadius: "8px",
-            border: "1px solid #ccc",
-            fontFamily: "monospace",
-            backgroundColor: "#fdfdfd",
-          }}
-        />
+        <div
+          className="html_code_editor"
+          style={{ display: showCode ? "block" : "none" }}
+        >
+          <textarea
+            value={htmlCode}
+            onChange={handleCodeInput}
+            placeholder="Write or paste HTML here..."
+            style={{
+              width: "100%",
+              minHeight: "240px",
+              padding: "1rem",
+              borderRadius: "8px",
+              border: "1px solid #ccc",
+              fontFamily:
+                "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace",
+              backgroundColor: "#fdfdfd",
+              lineHeight: 1.5,
+            }}
+          />
+        </div>
       </div>
     </div>
   );
-};
-
-// Styling for buttons
-const buttonStyle = {
-  backgroundColor: "#f4f4f4",
-  border: "none",
-  borderRadius: "8px",
-  padding: "10px",
-  margin: "5px",
-  cursor: "pointer",
-  boxShadow: "0 2px 5px rgba(0, 0, 0, 0.1)",
 };
 
 export default Editor;
